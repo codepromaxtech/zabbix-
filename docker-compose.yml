@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:latest
+    environment:
+      DB_SERVER_HOST: mysql  # Hostname or IP of your MySQL container
+      MYSQL_DATABASE: zabbix  # Ensure this database exists in MySQL
+      MYSQL_USER: zabbix      # Replace with your MySQL user for Zabbix
+      MYSQL_PASSWORD: zabbix_password  # Replace with the MySQL user password
+    depends_on:
+      - zabbix-web
+    volumes:
+      - zabbix-server:/var/lib/zabbix
+    networks:
+      - zabbix-net
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-mysql:latest
+    environment:
+      DB_SERVER_HOST: mysql  # Hostname or IP of your MySQL container
+      MYSQL_DATABASE: zabbix  # Ensure this matches the database for Zabbix in MySQL
+      MYSQL_USER: zabbix      # Ensure this matches the user in your MySQL
+      MYSQL_PASSWORD: zabbix_password  # Ensure this matches the password in your MySQL
+      ZBX_SERVER_HOST: zabbix-server
+    depends_on:
+      - zabbix-server
+    ports:
+      - "2998:8080"
+    networks:
+      - zabbix-net
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent:latest
+    environment:
+      ZBX_SERVER_HOST: zabbix-server
+    networks:
+      - zabbix-net
+
+volumes:
+  zabbix-server:
+
+networks:
+  zabbix-net:
